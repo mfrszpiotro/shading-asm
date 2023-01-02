@@ -1,4 +1,3 @@
-
         	.data
 input_start: 	.string "\nIn the following steps you need to put the RGB colors for three vertices of the triangle. This message will be followed by three consecutive messages.\n"
 input_vertice: 	.string "->Please enter the pixel value: "
@@ -10,7 +9,8 @@ v3:		.space	4
 bmp: 		.space 	230454		# the bmp file size
 fout:   	.asciz 	"shading.bmp"   # filename for output
         	.text
-        	
+
+#################################################################      	
 #input (R1,G1,B1), (R2,G2,B2), (R3,G3,B3)      	
 	li a7, 4
 	la a0, input_start
@@ -25,11 +25,11 @@ fout:   	.asciz 	"shading.bmp"   # filename for output
 	
 #################################################################
   # Open (for writing) a file that does not exist
-	li	a7, 1024     # system call for open file
-  	la  	a0, fout     # output file name
-  	li  	a1, 1        # Open for writing (flags are 0: read, 1: write)
-  	ecall                # open a file (file descriptor returned in a0)
-  	mv  	s11, a0       # save the file descriptor
+	li	a7, 1024     	# system call for open file
+  	la  	a0, fout     	# output file name
+  	li  	a1, 1        	# Open for writing (flags are 0: read, 1: write)
+  	ecall                	# open a file (file descriptor returned in a0)
+  	mv  	s11, a0      	# save the file descriptor
   	
 	la	a0, bmp
 	jal 	set_header
@@ -71,8 +71,7 @@ fout:   	.asciz 	"shading.bmp"   # filename for output
 	fcvt.s.w fs10, a2	#store top I_b_Red as float
 	
 ##########################################################
-#REQUIRED FOR CALULATIONS
-##########################################################
+#Phong shading method variables:
 	li	s10, 0 	#Xa
 	li	s9, 719	#Xb
 	li	s8, 0	#Xp
@@ -93,7 +92,7 @@ print_lines_lop:
 	
 print_line_lop:
 	#argument fa0
-	fmv.s	ft10, fs8 #
+	fmv.s	ft10, fs8
 	fmv.s	ft11, fs2
 	jal 	get_Ia
 	fmv.s	fa6, fa0
@@ -157,127 +156,5 @@ error:
     	la 	a0, err   # load desired value into argument register a0, using pseudo-op
    	ecall
 
-
-#################################################################
-# FUNCTIONS #
-#################################################################
-
-read_vertice:
-	mv t1, a0
-	mv t3, a0
-	addi t3, t3, 3 #end of loop
-	li t5, 255 #for comparing with max pixel width
-lop:
-	li a7, 4 #code print string
-	la a0, input_vertice
-	ecall
-	li a7, 5 #code read int
-	la a0, buf
-	ecall
-	#check if proper pixel value and store it if ok
-	bgt a0, t5, error
-	bltz a0, error
-	sb  a0, (t1)
-	addi t1, t1, 1
-	blt t1, t3, lop
-	
-	mv a0, t1
-ret
-
-set_header:
-	mv t1, a0
-	addi	t1, t1, 36
-	li	t2, 0x0003
-	sh	t2, (t1)
-	addi 	t1, t1, -2	
-	li	t2, 0x8400
-	sh	t2, (t1)
-	addi 	t1, t1, -6	
-	li	t2, 0x0018
-	sh	t2, (t1)
-	addi 	t1, t1, -2
-	li	t2, 0x0001
-	sh	t2, (t1)
-	addi 	t1, t1, -4
-	li	t2, 0x00F0
-	sh	t2, (t1)
-	addi 	t1, t1, -4	
-	li	t2, 0x0140
-	sh	t2, (t1)
-	addi 	t1, t1, -4	
-	li	t2, 0x0028
-	sh	t2, (t1)
-	addi 	t1, t1, -4
-	li	t2, 0x0036
-	sh	t2, (t1)
-	addi 	t1, t1, -6
-	li	t2, 0x0003
-	sh	t2, (t1)
-	addi 	t1, t1, -2
-	li	t2, 0x8436
-	sh	t2, (t1)
-	addi 	t1, t1, -2
-	li	t2, 0x4D42
-	sh	t2, (t1)
-	
-	mv a0, t1
-ret
-
-get_Ia: #args: ft10 as I1 and ft11 as I2. Returns at fa0.
-	#t6			#Ys - Y2 = Ys
-	li	a1, 240		#Y1 - Y2 = 240
-	fcvt.s.w fa1, a1	#(a1 = 240)
-	fcvt.s.w fa2, t6
-	fdiv.s  fa2, fa2, fa1	#... = res1 
-	fmul.s  fa2, fa2, ft10	#res1 * I1
-	#
-	sub	a3, a1, t6	#Y1 - Ys
-	fcvt.s.w fa3, a3
-	fdiv.s 	fa3, fa3, fa1	#... = res2
-	fmul.s 	fa3, fa3, ft11	#res2 * I2
-	#
-	fadd.s 	fa2, fa2, fa3
-	fmv.s	fa0, fa2
-ret
-
-#Y1 = 240
-#Y2 = 0
-#Y3 = 0
-#Y1 - Y2 = 240
-#Y1 - Y3 = 400 or 240
-
-get_Ib: #args: ft10 as I1 and ft11 as I2. Returns at fa0
-	mv 	a2, t6 		#Ys - Y3
-	li	a1, 240		#Y1 - Y3
-	fcvt.s.w fa1, a1
-	fcvt.s.w fa2, a2
-	fdiv.s  fa2, fa2, fa1	#... = res1 
-	fmul.s  fa2, fa2, ft10	#res1 * I1
-	#
-	sub	a3, a1, t6	#Y1 - Ys
-	fcvt.s.w fa3, a3
-	fdiv.s 	fa3, fa3, fa1	#... = res2
-	fmul.s 	fa3, fa3, ft11	#res2 * I3
-	#
-	fadd.s 	fa2, fa2, fa3
-	fmv.s	fa0, fa2
-ret
-
-print_shaded_color:
-	sub 	a2, s9, s8 	#Xb - Xp
-	sub	a1, s9, s10	#Xb - Xa
-	fcvt.s.w fa1, a1
-	fcvt.s.w fa2, a2
-	fdiv.s  fa2, fa2, fa1	#... = res1 
-	fmul.s  fa2, fa2, fa6	#res1 * Ia
-	#
-	sub	a3, s8, s10	#Xp - Xa
-	fcvt.s.w fa3, a3
-	fdiv.s 	fa3, fa3, fa1	#... = res2
-	fmul.s 	fa3, fa3, fa7	#res2 * Ib
-	#
-	fadd.s 	fa2, fa2, fa3
-	fcvt.w.s a2, fa2
-	sb	a2, (a0)
-	addi	a0, a0, 1
-ret
+		.include "setbmpheader.asm"
+		.include "shadinglib.asm"
