@@ -21,14 +21,16 @@ lop:
 ret
 
 get_Ia: #args: ft10 as I1 and ft11 as I2. Returns at fa0.
-	#t6			#Ys - Y2 = Ys
-	li	a1, 240		#Y1 - Y2 = 240
-	fcvt.s.w fa1, a1	#(a1 = 240)
-	fcvt.s.w fa2, t6
+	li  t5, 20
+	li	a1, 210			#Y1 - Y2
+	sub a2, t6, t5		#Ys - Y2
+	fcvt.s.w fa1, a1		
+	fcvt.s.w fa2, a2
 	fdiv.s  fa2, fa2, fa1	#... = res1 
 	fmul.s  fa2, fa2, ft10	#res1 * I1
 	#
-	sub	a3, a1, t6	#Y1 - Ys
+	li t5,	230
+	sub	a3, t5, t6	#Y1 - Ys
 	fcvt.s.w fa3, a3
 	fdiv.s 	fa3, fa3, fa1	#... = res2
 	fmul.s 	fa3, fa3, ft11	#res2 * I2
@@ -37,21 +39,22 @@ get_Ia: #args: ft10 as I1 and ft11 as I2. Returns at fa0.
 	fmv.s	fa0, fa2
 ret
 
-#Y1 = 240
-#Y2 = 0
-#Y3 = 0
-#Y1 - Y2 = 240
-#Y1 - Y3 = 400 or 240
+#Y1 = 230
+#Y2 = 20 
+#Y3 = 97 = s1
+#Y1 - Y2 = 210
+#Y1 - Y3 = 133
 
 get_Ib: #args: ft10 as I1 and ft11 as I2. Returns at fa0
-	mv 	a2, t6 		#Ys - Y3
-	li	a1, 240		#Y1 - Y3
+	li 		t5, 230		#Y1
+	sub 	a2, t6, s1	#Ys - Y3
+	li		a1, 133		#Y1 - Y3
 	fcvt.s.w fa1, a1
 	fcvt.s.w fa2, a2
 	fdiv.s  fa2, fa2, fa1	#... = res1 
 	fmul.s  fa2, fa2, ft10	#res1 * I1
 	#
-	sub	a3, a1, t6	#Y1 - Ys
+	sub	a3, t5, t6	#Y1 - Ys
 	fcvt.s.w fa3, a3
 	fdiv.s 	fa3, fa3, fa1	#... = res2
 	fmul.s 	fa3, fa3, ft11	#res2 * I3
@@ -61,14 +64,14 @@ get_Ib: #args: ft10 as I1 and ft11 as I2. Returns at fa0
 ret
 
 print_shaded_color:
-	sub 	a2, s9, s8 	#Xb - Xp
-	sub	a1, s9, s10	#Xb - Xa
+	sub 	a2, t2, t3 	#Xb - Xp
+	sub		a1, t2, t1	#Xb - Xa
 	fcvt.s.w fa1, a1
 	fcvt.s.w fa2, a2
 	fdiv.s  fa2, fa2, fa1	#... = res1 
 	fmul.s  fa2, fa2, fa6	#res1 * Ia
 	#
-	sub	a3, s8, s10	#Xp - Xa
+	sub	a3, t3, t1	#Xp - Xa
 	fcvt.s.w fa3, a3
 	fdiv.s 	fa3, fa3, fa1	#... = res2
 	fmul.s 	fa3, fa3, fa7	#res2 * Ib
