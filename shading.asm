@@ -6,8 +6,8 @@ buf:		.space	2
 v1:		.space	4
 v2:		.space	4
 v3:		.space	4
-bmp: 		.space 	220854		# size till the triangle end scanline
-triangle_end:	.space 	  9600		# empty space after the triangle drawing
+bmp: 		.space 	217974		# size till the triangle end scanline
+triangle_end:	.space 	 12480		# empty space after the triangle drawing
 fout:   	.asciz 	"shading.bmp"   # filename for output
         	.text
 
@@ -80,14 +80,19 @@ shade:
 	jal 	set_header	#a0 i/o arg - memory address of the file
 #################################################################
 #Phong shading method variables:
-	li	t1, 489 	#Xa
+	li	t1, 492 	#Xa
 	li	t2, 492		#Xb
-	mv	t3, t1 		#Xp
 	sub	a6, t2, t1	#length of consecutive scanline
-	li	t6, 20 	#Ys - for every scan line, the Ys (t6) is incremented
-	
+	li	t6, 20 		#Ys - for every scan line, the Ys (t6) is incremented
+	add	a3, t2,	t2	#arg for phong eq. fix
 print_lines_lop:
-	mv	t3, t1
+	li	t3, 98
+	mv	a4, t2
+	bge	t6, t3, skip_fix
+	jal	fix_phong	#arg inp a3, arg out a3
+	mv	a4, a3
+skip_fix:
+	mv	t3, t1		#Xp
 	mv	a0, s0
 	add	a0, a0, t1
 	li	t0, 960
@@ -128,10 +133,10 @@ print_line_lop:
 	fmv.s	ft10, fs10
 	fmv.s	ft11, fs7
 	jal	get_Ib
-	fmv.s	fa7, fa0
+	fmv.s	fa7, fa0 
 	jal	print_shaded_color
 	
-	addi	t3, t3, 1
+	addi	t3, t3, 3
 	sub	a5, a0, a7
 	ble 	a5, a6, print_line_lop
 	
