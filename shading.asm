@@ -59,14 +59,6 @@ fout:   	.asciz 	"shading.bmp"   # filename for output
 	addi	t2, t2, 1
 	lbu	a2, (t2)
 	fcvt.s.w fs10, a2	#store top I_b_Red as float
-	
-#################################################################
-  # Open (for writing) a file that does not exist
-	li	a7, 1024     	# system call for open file
-  	la  	a0, fout     	# output file name
-  	li  	a1, 1        	# Open for writing (flags are 0: read, 1: write)
-  	ecall                	# open a file (file descriptor returned in a0)
-  	mv  	s11, a0      	# save the file descriptor
  
 #Execution of the function:
 #################################################################
@@ -76,93 +68,14 @@ fout:   	.asciz 	"shading.bmp"   # filename for output
 	addi	s0, s0, 54	#R2  G2  B2 	R3  G3  B3	R1  G1  B1
 	jal	shade		#fs4 fs3 fs2	fs7 fs6 fs5	fs10 fs9 fs8
 
-shade:
-	jal 	set_header	#a0 i/o arg - memory address of the file
-#################################################################
-#Phong shading method variables:
-	li	t1, 492 	#Xa
-	li	t2, 492		#Xb
-	sub	a6, t2, t1	#length of consecutive scanline
-	li	t6, 20 		#Ys - for every scan line, the Ys (t6) is incremented
-	add	a3, t2,	t2	#arg for phong eq. fix
-print_lines_lop:
-	li	t3, 98
-	mv	a4, t2
-	bge	t6, t3, skip_fix
-	jal	fix_phong	#arg inp a3, arg out a3
-	mv	a4, a3
-skip_fix:
-	mv	t3, t1		#Xp
-	mv	a0, s0
-	add	a0, a0, t1
-	li	t0, 960
-	mul	t0, t0, t6 	#new line distance from header
-	add	a0, a0, t0	#a0 is now pointing to new line
-	la	t0, triangle_end
-	bge	a0, t0, write_contents
-	mv	a7, a0
-	
-print_line_lop:
-	#argument fa0
-	fmv.s	ft10, fs8
-	fmv.s	ft11, fs2
-	jal 	get_Ia
-	fmv.s	fa6, fa0
-	fmv.s	ft10, fs8
-	fmv.s	ft11, fs5
-	jal	get_Ib
-	fmv.s	fa7, fa0
-	jal	print_shaded_color
-	
-	#argument fa0
-	fmv.s	ft10, fs9
-	fmv.s	ft11, fs3
-	jal 	get_Ia
-	fmv.s	fa6, fa0
-	fmv.s	ft10, fs9
-	fmv.s	ft11, fs6
-	jal	get_Ib
-	fmv.s	fa7, fa0
-	jal	print_shaded_color
-	
-	#argument fa0
-	fmv.s	ft10, fs10
-	fmv.s	ft11, fs4
-	jal 	get_Ia
-	fmv.s	fa6, fa0
-	fmv.s	ft10, fs10
-	fmv.s	ft11, fs7
-	jal	get_Ib
-	fmv.s	fa7, fa0 
-	jal	print_shaded_color
-	
-	addi	t3, t3, 3
-	sub	a5, a0, a7
-	ble 	a5, a6, print_line_lop
-	
-###################################################################
-#triangle lhs calculations
-	li	t5, 3
-	addi 	t4, t4, 1
-	ble	t4, t5, lhs_pass
-	li	t4, 0
-	sub	t1, t1, t5	#Xa decrement after every 3 iterations
-lhs_pass:
-
-###################################################################
-#triangle rhs calculations
-	ble	t6, s1, rhs_pass#a coefficient of rhs is switched
-	li	t5, -3
-rhs_pass:
-	add	t2, t2, t5	#Xb
-	
-###################################################################
-
-	sub	a6, t2, t1	#length of consecutive scanline
-	addi 	t6, t6, 1 	#increment Ys
-	j	print_lines_lop
-
 write_contents:
+#################################################################
+  # Open (for writing) a file that does not exist
+	li	a7, 1024     	# system call for open file
+  	la  	a0, fout     	# output file name
+  	li  	a1, 1        	# Open for writing (flags are 0: read, 1: write)
+  	ecall                	# open a file (file descriptor returned in a0)
+  	mv  	s11, a0      	# save the file descriptor
   ###############################################################
   # Write contents to opened file
   	li	a7, 64       # system call for write to file
